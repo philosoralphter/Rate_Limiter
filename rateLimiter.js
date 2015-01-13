@@ -1,11 +1,15 @@
 module.exports.RateLimiter = RateLimiter;
 
 
-function RateLimiter(redisInfo) = {
+function RateLimiter(redisPORT, redisIP, redisOptions) = {
   var redis = require('redis');
+  var shouldAuthenticate = redisOptions.hasOwnProperty('password') ? true : false;
+  var redisPassword = redisOptions.password || null;
 
+  //--------------
   //Public Methods
-  this.authorizeRequest = function(APIname, usr){
+  //---------------
+  this.authorizeRequest = function(APIname, usr, callback){
     var redisClient = redis.createClient();
 
   }
@@ -18,7 +22,9 @@ function RateLimiter(redisInfo) = {
       "perUserLimitTimeWindow" : timeWindow
     }
     //store each api's info in a hash table in redis named APIName Settings
-    redisClient.HMSET(apiOptions.APIOptionsHashTable , 'globalLimit', apiOptions.globalLimit, 'perUserLimitTimeWindow', apiOptions.perUserLimitTimeWindow);
+    authorizeRedisConnection(redisClient, function(){
+      redisClient.HMSET(apiOptions.APIOptionsHashTable , 'globalLimit', apiOptions.globalLimit, 'perUserLimitTimeWindow', apiOptions.perUserLimitTimeWindow);
+    });
   }
 
   this.setGlobalLimit = function(APIname, limit, timeWindow){
@@ -39,5 +45,13 @@ function RateLimiter(redisInfo) = {
 
   function checkUsrLimit(APIname, usr){
 
+  }
+
+  function authorizeRedisConnection(client, callback){
+    if (shouldAuthenticate){
+      client.auth(redisPassword, callback);
+    }else{
+      callback();
+    }
   }
 }

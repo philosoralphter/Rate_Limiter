@@ -14,8 +14,9 @@ In your server or your API client, require rateLimiter.js and instantiate a rate
 ```javascript
 var RateLimiter = require('../path-to/rateLimiter.js');
 
-var rateLimiter = new RateLimiter();
+var rateLimiter = new RateLimiter(6379, localhost, {});
 ```
+
 
 ####`rateLimiter.authorizeRequest(APIname:<string>, usr:<string>)`
 
