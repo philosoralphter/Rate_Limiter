@@ -1,0 +1,28 @@
+{
+  "name": "APIRateLimiter",
+  "version": "0.0.1",
+  "description": "Incoming and Outgoing API rate limiter",
+  "main": "server.js",
+  "scripts": {
+    "test": "grunt test",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://philosoralphter@bitbucket.org/hapicoders/ralph-samuel.git"
+  },
+  "keywords": [
+    "API",
+    "rate-limiter"
+  ],
+  "author": "Ralph Samuel",
+  "license": "ISC",
+  "dependencies": {
+    "hiredis": "^0.1.17",
+    "redis": "^0.12.1"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "restify": "^2.8.4"
+  }
+}
