@@ -4,8 +4,9 @@ module.exports.RateLimiter = RateLimiter;
 
 function RateLimiter(redisPORT, redisIP, redisOptions) {
   var redis = require('redis');
-  var shouldAuthenticate = redisOptions.hasOwnProperty('password') ? true : false;
-  var redisPassword = redisOptions.password || null;
+  //Currently unused:
+  //var shouldAuthenticate = redisOptions.hasOwnProperty('auth_pass') ? true : false;
+  //var redisPassword = redisOptions.auth_pass || null;
 
   //--------------
   //Public Methods
@@ -19,12 +20,12 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
       if (APIOptions.globalLimit && APIOptions.perUserLimit){
         checkGlobalLimit(APIOptions, function(response){
-          if (response != true){
+          if (response !== true){
             console.log('Global Limit Exceeded for API: ', APIname);
             mainCallback(false);
           }else{
             checkPerUserLimit(APIOptions, usr, function(response){
-              if (response != true){
+              if (response !== true){
                 console.log('Per User Limit Exceeded for API: ', APIname, 'and user: ', usr);
                 mainCallback(false);
               }else{
@@ -35,7 +36,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
         });
       }else if (APIOptions.globalLimit){
         checkGlobalLimit(APIOptions, function(response){
-          if (response != true){
+          if (response !== true){
             console.log('Global Limit Exceeded for API: ', APIname);
             mainCallback(false);
           }else{
@@ -44,7 +45,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
         });
       }else if (APIOptions.perUserLimit){
         checkPerUserLimit(APIname, usr, function(response){
-          if (response != true){
+          if (response !== true){
             console.log('Per User Limit Exceeded for API: ', APIname, 'and user: ', usr);
             mainCallback(false);
           }else{
@@ -56,7 +57,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
         mainCallback(true);
       }
     });
-  }
+  };
 
   this.setPerUserLimit = function(APIname, limit, timeWindow){
     var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
@@ -67,10 +68,10 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       "perUserLimit" : limit,
       "perUserLimitTimeWindow" : timeWindow
       //"usrListsHash" : APIname + ' user tracker lists'
-    }
+    };
     //store each api's info in a hash table in redis named APIName Settings
       redisClient.HMSET(APIOptions.APIOptionsHashTableName , 'APIname', APIname, 'perUserLimit', APIOptions.perUserLimit, 'perUserLimitTimeWindow', APIOptions.perUserLimitTimeWindow);
-  }
+  };
 
   this.setGlobalLimit = function(APIname, limit, timeWindow){
     var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
@@ -81,12 +82,14 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       "globalLimit" : limit,
       "globalTrackerListName" : APIname + ' global limit tracker list',
       "globalLimitTimeWindow" : timeWindow
-    }
+    };
     //store each api's info in a hash table in redis named APIname Settings
     redisClient.HMSET(APIOptions.APIOptionsHashTableName, 'APIname', APIname,'globalLimit', APIOptions.globalLimit, 'globalLimitTimeWindow', APIOptions.timeWindow);
-  }
+  };
 
-  //Private functions
+  //--------------
+  //Private Helper Functions
+  //-------------
   function checkGlobalLimit(APIOptions, callback){
     var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
 
@@ -114,7 +117,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
           }
         });
       }
-      popDirtyItems(redisClient, listName, timeWindow)
+      popDirtyItems(redisClient, listName, timeWindow);
       redisClient.RPUSH(listName, new Date.getTime());
     });
     callback(response);
@@ -132,7 +135,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
           if (err){console.log(err);}
           lastPoppedItemTime = response;
           asyncCallback(err);
-        })
+        });
       },
       function testIfWithinWindow(){
         var now = new Date().getTime();

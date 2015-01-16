@@ -4,8 +4,10 @@
   "description": "Incoming and Outgoing API rate limiter.  Limit other things if you dare.",
   "main": "server.js",
   "scripts": {
-    "test": "grunt test",
-    "start": "node server.js"
+    "lint": "./node_modules/.bin/jshint . --reporter=./node_modules/jshint-full-path/index.js",
+    "pretest": "npm run-script lint",
+    "test": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --recursive -R spec -r should",
+    "posttest": "./node_modules/.bin/istanbul check-coverage && rm -rf coverage"
   },
   "repository": {
     "type": "git",
@@ -23,7 +25,9 @@
     "redis": "^0.12.1"
   },
   "devDependencies": {
-    "grunt": "^0.4.5",
-    "restify": "^2.8.4"
+    "istanbul": "^0.3.5",
+    "mocha": "^2.1.0",
+    "restify": "^2.8.4",
+    "should": "^4.6.0"
   }
 }
