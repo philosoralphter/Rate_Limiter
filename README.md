@@ -6,6 +6,9 @@ Place the APIRateLimiter folder into your project folder.
 
 [Install and run redis]:http://redis.io/topics/quickstart on your server.
 
+###Incoming/outgoing
+RateLimiter is capable of tracking both incoming or outgoing requests.  In fact, it can be used to limit the rate of anything if you're clever.
+
 ##Usage
 ---
 ###Require rateLimiter and the RateLimiter Constructor:
@@ -60,6 +63,9 @@ To initiate limit tracking for an API, use this function on its own or along wit
 `limit` should be an integer, such that the system will allow: *limit* global requests per *timeWindow*
 
 ###Testing
+For the purposes of testing, a small test server has been created at tests/testServer.js.  This server creates and uses mock API requests to test the rateLimiter.  It also serves as an example for integrating rateLimiter with your node server.
+
+To run tests, `$ npm test`.
 
 ###Roadmap
 *Separate code into incoming and outgoing rate limiters.  Expose specialized objects.  Create express middlewre for incoming limiters.
