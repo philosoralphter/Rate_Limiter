@@ -1,7 +1,7 @@
 {
-  "name": "APIRateLimiter",
+  "name": "rate_limiter",
   "version": "0.0.1",
-  "description": "Incoming and Outgoing API rate limiter.  Limit other things if you dare.",
+  "description": "Incoming and Outgoing API rate limiter.  Limit other rates if you dare.",
   "main": "server.js",
   "scripts": {
     "lint": "./node_modules/.bin/jshint . --reporter=./node_modules/jshint-full-path/index.js",
