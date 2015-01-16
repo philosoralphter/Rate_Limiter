@@ -27,7 +27,7 @@ The third parameter of the RateLimiter constructor takes a javascript object wit
 
 Other available properties can be found [here]:https://www.npmjs.com/package/redis in the API documentation of the npm module redis.
 
-####`rateLimiter.authorizeRequestAsync(APIname:<string>, usr:<string>)`
+####`rateLimiter.authorizeRequest(APIname:<string>, usr:<string>)`
 
 This function takes the name of an API being limited, and optionally, a string associated with the usr making the request.
 
