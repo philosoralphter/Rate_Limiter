@@ -1,12 +1,11 @@
 module.exports.RateLimiter = RateLimiter;
 
-
+RateLimiter.constructor = RateLimiter;
 
 function RateLimiter(redisPORT, redisIP, redisOptions) {
   var redis = require('redis');
   //Currently unused:
   //var shouldAuthenticate = redisOptions.hasOwnProperty('auth_pass') ? true : false;
-  //var redisPassword = redisOptions.auth_pass || null;
 
   //--------------
   //Public Methods
@@ -16,7 +15,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
     
     redisClient.HGETALL(APIname + ' Settings', function(err, reply){
       if (err){console.log(err);}
-      var APIOptions = parseRedisHash(reply);
+      var APIOptions = reply;
 
       if (APIOptions.globalLimit && APIOptions.perUserLimit){
         checkGlobalLimit(APIOptions, function(response){
@@ -84,7 +83,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       "globalLimitTimeWindow" : timeWindow
     };
     //store each api's info in a hash table in redis named APIname Settings
-    redisClient.HMSET(APIOptions.APIOptionsHashTableName, 'APIname', APIname,'globalLimit', APIOptions.globalLimit, 'globalLimitTimeWindow', APIOptions.timeWindow);
+    redisClient.HMSET(APIOptions.APIOptionsHashTableName, 'APIname', APIname,'globalLimit', APIOptions.globalLimit, 'globalLimitTimeWindow', APIOptions.globalLimitTimeWindow, 'globalTrackerListName', APIOptions.globalTrackerListName);
   };
 
   //--------------
@@ -97,7 +96,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
   }
 
-  function checkUsrLimit(APIOptions, usr, callback){
+  function checkPerUserLimit(APIOptions, usr, callback){
     var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
 
     checkListAtLimit(redisClient, APIOptions.APIname+'usr', APIOptions.perUserLimit, APIOptions.perUserLimitTimeWindow, callback);
@@ -119,8 +118,8 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       }
       popDirtyItems(redisClient, listName, timeWindow);
       redisClient.RPUSH(listName, new Date.getTime());
+      callback(response);
     });
-    callback(response);
   }
 
   //Private Subroutines
@@ -129,7 +128,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
     var lastPoppedItemTime;
     var newLength;
 
-    async.dowhilst(
+    async.doWhilst(
       function popEarliestItem(asyncCallback){
         redisClient.LPOP(listName, function(err, response){
           if (err){console.log(err);}
@@ -139,7 +138,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       },
       function testIfWithinWindow(){
         var now = new Date().getTime();
-        return now - lastPoppedItemTime >= timeWindow;
+        return (now - lastPoppedItemTime) >= timeWindow;
       },
       function doneCleaning(err){
         if (err){console.log(err);}
@@ -152,10 +151,11 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   function getAPIOptions(APIname, callback){
     redisClient.HGETALL(APIname + ' Settings', function(err, relpy){
       if (err){console.log(err);}
-      callback(parseRedisHash(reply));
+      callback(reply);
     });
   }
 
+//apparently not needed
   function parseRedisHash(array){
     var results = {};
     for (var i = 0; i < array.length; i+=2) {
