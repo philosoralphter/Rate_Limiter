@@ -3,9 +3,8 @@ module.exports.RateLimiter = RateLimiter;
 RateLimiter.constructor = RateLimiter;
 
 function RateLimiter(redisPORT, redisIP, redisOptions) {
+  //Closure Properties
   var redis = require('redis');
-  //Currently unused:
-  //var shouldAuthenticate = redisOptions.hasOwnProperty('auth_pass') ? true : false;
 
   //--------------
   //Public Methods
@@ -17,6 +16,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       if (err){console.log(err);}
       var APIOptions = reply;
 
+      //Check both limits
       if (APIOptions.globalLimit && APIOptions.perUserLimit){
         checkGlobalLimit(APIOptions, function(response){
           if (response !== true){
@@ -33,6 +33,8 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
             });
           }
         });
+
+      //Check Global only
       }else if (APIOptions.globalLimit){
         checkGlobalLimit(APIOptions, function(response){
           if (response !== true){
@@ -42,6 +44,8 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
             mainCallback(true);
           }
         });
+
+      //Check per-user limit only
       }else if (APIOptions.perUserLimit){
         checkPerUserLimit(APIname, usr, function(response){
           if (response !== true){
@@ -51,6 +55,8 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
             mainCallback(true);
           }
         });
+
+    //No limits set->approve
       }else{
         console.log('No limits set for API: ', APIname);
         mainCallback(true);
@@ -60,13 +66,12 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
   this.setPerUserLimit = function(APIname, limit, timeWindow){
     var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
-    //initiate a hash of options for each API
+    //Schema of APIOptions hash table in redis
     var APIOptions = {
       "APIOptionsHashTableName": APIname + ' Settings',
       "APIname": APIname,
       "perUserLimit" : limit,
       "perUserLimitTimeWindow" : timeWindow
-      //"usrListsHash" : APIname + ' user tracker lists'
     };
     //store each api's info in a hash table in redis named APIName Settings
       redisClient.HMSET(APIOptions.APIOptionsHashTableName , 'APIname', APIname, 'perUserLimit', APIOptions.perUserLimit, 'perUserLimitTimeWindow', APIOptions.perUserLimitTimeWindow);
@@ -74,7 +79,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
   this.setGlobalLimit = function(APIname, limit, timeWindow){
     var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
-    //Schema of APIOptions object in redis
+    //Schema of APIOptions hash table in redis
     var APIOptions = {
       "APIname": APIname,
       "APIOptionsHashTableName": APIname + ' Settings',
@@ -82,7 +87,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       "globalTrackerListName" : APIname + ' global limit tracker list',
       "globalLimitTimeWindow" : timeWindow
     };
-    //store each api's info in a hash table in redis named APIname Settings
+    //store each api's info in a hash table in redis named '<APIname>+ Settings'
     redisClient.HMSET(APIOptions.APIOptionsHashTableName, 'APIname', APIname,'globalLimit', APIOptions.globalLimit, 'globalLimitTimeWindow', APIOptions.globalLimitTimeWindow, 'globalTrackerListName', APIOptions.globalTrackerListName);
   };
 
@@ -90,44 +95,60 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   //Private Helper Functions
   //-------------
   function checkGlobalLimit(APIOptions, callback){
-    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
 
-    checkListAtLimit(redisClient, APIOptions.globalTrackerListName, APIOptions.globalLimit, APIOptions.globalLimitTimeWindow, callback);
+    checkListNotAtLimit(APIOptions.globalTrackerListName, APIOptions.globalLimit, APIOptions.globalLimitTimeWindow, callback);
 
   }
 
   function checkPerUserLimit(APIOptions, usr, callback){
-    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
 
-    checkListAtLimit(redisClient, APIOptions.APIname+'usr', APIOptions.perUserLimit, APIOptions.perUserLimitTimeWindow, callback);
+    checkListNotAtLimit(APIOptions.APIname+usr, APIOptions.perUserLimit, APIOptions.perUserLimitTimeWindow, callback);
   }
 
-  function checkListAtLimit(redisClient, listName, limit, timeWindow, callback){
+  function checkListNotAtLimit (listName, limit, timeWindow, callback){
+    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
+
+    //Check list length
     redisClient.LLEN(listName, function(err, response){
       if (err){console.log(err);}
+      
+      //if length below limit, approve
       if (response <= limit){
         callback(true);
+        //Push time of new, approved call to list:
+        redisClient.RPUSH(listName, new Date.getTime());
+
+      //Otherwise, clean list of expired calls (> timeWindow old)
+      //and check new length, approving or denying request accordingly
       }else{
-        popDirtyItems(redisClient, listName, timeWindow, function(lengthAfterPops){
+        popDirtyItems(listName, timeWindow, function(lengthAfterPops){
           if (lengthAfterPops <= limit){
             callback(true);
+            //Push time of new, approved call to list:
+            redisClient.RPUSH(listName, new Date.getTime());
           }else{
             callback(false);
           }
         });
       }
-      popDirtyItems(redisClient, listName, timeWindow);
-      redisClient.RPUSH(listName, new Date.getTime());
-      callback(response);
+
+      //clean list after every check
+      //!!May be a better place to do this if performance becomes an issue
+      popDirtyItems(listName, timeWindow);
+
+      redisClient.quit();
     });
   }
 
   //Private Subroutines
-  function popDirtyItems(redisClient, listName, timeWindow, listCleanedCB){
+  function popDirtyItems(listName, timeWindow, listCleanedCB){
     var async = require('async');
+    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
     var lastPoppedItemTime;
     var newLength;
 
+    //Async Loop:  pop head off list until popped item is within timeWindow old.
+    //then push it back on, and return new list length
     async.doWhilst(
       function popEarliestItem(asyncCallback){
         redisClient.LPOP(listName, function(err, response){
@@ -142,20 +163,27 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       },
       function doneCleaning(err){
         if (err){console.log(err);}
-        redisClient.RPUSH(listName, lastPoppedItemTime);
+        redisClient.LPUSH(listName, lastPoppedItemTime);
+        redisClient.quit();
         if (listCleanedCB){listCleanedCB(newLength);}
       }
     );
   }
 
+//
+//not currently used:
+//
   function getAPIOptions(APIname, callback){
+    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
     redisClient.HGETALL(APIname + ' Settings', function(err, relpy){
       if (err){console.log(err);}
       callback(reply);
+      redisClient.quit();
     });
   }
 
 //apparently not needed
+//--counter to documentation, redis hashes seem to come back as parsed objects, not [key, value, key, value] arrays
   function parseRedisHash(array){
     var results = {};
     for (var i = 0; i < array.length; i+=2) {

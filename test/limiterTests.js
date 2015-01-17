@@ -28,7 +28,7 @@ describe ('RateLimiter.js', function(){
     describe('rateLimiter.setPerUserLimit(): ', function(){
       rateLimiter.setPerUserLimit('usertestAPI', 10, 1000);
       
-      it('should leave an object with appropriate properties in redis database under "APIname + Settings"', function(done){
+      it('should leave a hash/object with appropriate properties in redis database under "APIname + Settings"', function(done){
         redisClient.HGETALL('usertestAPI Settings', function(err, response){
           if (err){
             console.log(err);
@@ -50,9 +50,10 @@ describe ('RateLimiter.js', function(){
       rateLimiter.setGlobalLimit('globaltestAPI', 500, 10000);
 
 
-      it('should leave an object with appropriate properties in redis database under "APIname + Settings"', function(done){
+      it('should leave a hash/object with appropriate properties in redis database under "APIname + Settings"', function(done){
         redisClient.HGETALL('globaltestAPI Settings', function(err, response){
           if (err){
+            console.log(err);
             throw err;
           }
           response.should.be.ok;
