@@ -54,7 +54,7 @@ If you are only limiting global calls, passing `null` in the place of a user str
 
 The third parameter takes a callback function which will be called asynchronously once the rate limiter has cleared or rejected a request.  The callback will be called with a single boolean argument:  `true` if the request would not exceed the set limit, or `false` if it would.  You should pass a function that will handle either sending, queueing, or discarding the request once it is approved or denied.  
 
-It may be necessary to pass a closure to maintain access to the request object in question.  This will be fixed soon with express.js middleware handling, or perhaps sooner, an optional fourth argument to `authorizeRequest()` that will accept a raw request object which it will pass untouched to the callback.
+You may find it necessary to pass a closure to maintain access to the request object in question.  This will be fixed soon with express.js middleware handling, or perhaps sooner, an optional fourth argument to `authorizeRequest()` that will accept a raw request object which it will pass untouched to the callback.
 
 
 ####rateLimiter.setPerUserLimit(APIname:\<string\>, limit:\<integer\>, timeWindow:\<integer\>)
