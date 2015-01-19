@@ -4,12 +4,18 @@ This is an npm module that will allow you to instantiate a RateLimiter object in
 ###Installation and Dependencies
 Place the APIRateLimiter folder into your project folder, or use npm:
 
-```console
-npm install --save rate_limiter
+```shell
+$ npm install --save rate_limiter
 ```
 
 Next, install and run redis on your server.
 [Quickstart Guide]http://redis.io/topics/quickstart
+
+Once redis is installed, you can run it with:
+
+```shell
+$ redis-server
+```
 
 It is fastest to use a redis instance running locally to your server.  If you do this, and do not change redis default port, the example `redisPORT` and `redisIP` arguments given below to the `RateLimiter()` constructor will be the redis defaults.
 
@@ -31,14 +37,17 @@ var RateLimiter = require('rateLimiter');
 ####RateLimiter(redisPORT:\<integer\>, redisIP:\<string\>, redisOptions:\<object\>)
 
 Instantiate a new rateLimiter object.
-```
+```javascript
 var rateLimiter = new RateLimiter(6379, "localhost", {});
 ```
+
+Any argument can be `null` to accept redis defaults.  To accept all redis defaults (Port: 6379, ip: localhost, no options), use constructor with no arguments.
+
 #####redisOptions
 
 The third parameter of the RateLimiter constructor takes a javascript object with the following notable property:
 
-*`"auth_pass" : <string>` If your redis database is secured, place the password here.
+* `"auth_pass" : <string>` If your redis database is secured, place the password here.
 
 Other available properties can be found [here: https://www.npmjs.com/package/redis]https://www.npmjs.com/package/redis in the API documentation of the npm redis module.  They should mirror the options available in the redis API for server and connection options.
 
