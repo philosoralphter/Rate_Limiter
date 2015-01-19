@@ -3,6 +3,11 @@ module.exports.RateLimiter = RateLimiter;
 RateLimiter.constructor = RateLimiter;
 
 function RateLimiter(redisPORT, redisIP, redisOptions) {
+  //Defaults
+  redisPORT = redisPORT || 6379;
+  redisIP = redisIP || 'localhost';
+  redisOptions = redisOptions || {};
+
   //Closure Properties
   var redis = require('redis');
 
