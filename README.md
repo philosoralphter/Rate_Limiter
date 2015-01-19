@@ -3,12 +3,15 @@ This is an npm module that will allow you to instantiate a RateLimiter object in
 
 ###Installation and Dependencies
 Place the APIRateLimiter folder into your project folder, or use npm:
+
 ```console
-npm install --save 
-'''
+npm install --save rate_limiter
+```
 
-[Install and run redis]http://redis.io/topics/quickstart on your server.
+Next, install and run redis on your server.
+[Quickstart Guide]http://redis.io/topics/quickstart
 
+It is fastest to use a redis instance running locally to your server.  If you do this, and do not change redis default port, the example `redisPORT` and `redisIP` arguments given below to the `RateLimiter()` constructor will be the redis defaults.
 
 ##Usage
 
@@ -23,11 +26,11 @@ var RateLimiter = require('rateLimiter');
 ```
 
 
-####RateLimiter(redisPORT:<integer>, redisIP:<string>, redisOptions:<object>)
+####RateLimiter(redisPORT:\<integer\>, redisIP:\<string\>, redisOptions:\<object\>)
 
 Instantiate a new rateLimiter object.
 ```
-var rateLimiter = new RateLimiter(6379, localhost, {});
+var rateLimiter = new RateLimiter(6379, "localhost", {});
 ```
 #####redisOptions
 
@@ -41,7 +44,7 @@ Other available properties can be found [here: https://www.npmjs.com/package/red
 
 ###rateLimiter Methods
 
-####rateLimiter.authorizeRequest(APIname:<string>, user:<string>, callback:<function(<boolean>)>)
+####rateLimiter.authorizeRequest(APIname:\<string>, user:\<string\>, callback:\<function(\<boolean\>)\>)
 
 This function takes the name of an API being limited, a string associated with the user making the request.  This will likely be an IP, but not necessarily.
 
@@ -52,7 +55,7 @@ The third parameter takes a callback function which will be called once the rate
 The callback will be called with a single boolean argument:  `true` if the request will not exceed the set limit, or `false` if it would.
 
 
-####rateLimiter.setPerUserLimit(APIname:<string>, limit:<integer>, timeWindow:<integer>)
+####rateLimiter.setPerUserLimit(APIname:\<string\>, limit:\<integer\>, timeWindow:\<integer\>)
 
 To initiate limit tracking for an API, use this function on its own or along with rateLimiter.setGlobalLimit().  A new API tracker will be created if APIname hasn't been added before.  
 
@@ -60,7 +63,7 @@ To initiate limit tracking for an API, use this function on its own or along wit
 
 `limit` should be an integer.  such that the system will allow: *limit* requests per user per *timeWIndow*
 
-####rateLimiter.setGlobalLimit(APIname:<string>, limit:<integer>, timeWindow:<integer>)
+####rateLimiter.setGlobalLimit(APIname:\<string\>, limit:\<integer\>, timeWindow:\<integer\>)
 
 To initiate limit tracking for an API, use this function on its own or along with rateLimiter.setPerUserLimit().
 
