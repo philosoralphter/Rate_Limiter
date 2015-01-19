@@ -147,7 +147,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
     var lastPoppedItemTime;
     var newLength;
 
-    //Async Loop:  pop head off list until popped item is within timeWindow old.
+    //Sync Loop:  pop head off list until popped item is within timeWindow old.
     //then push it back on, and return new list length
     async.doWhilst(
       function popEarliestItem(asyncCallback){

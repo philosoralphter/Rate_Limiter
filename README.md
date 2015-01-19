@@ -4,7 +4,7 @@ This is an npm module that will allow you to instantiate a RateLimiter object in
 ###Installation
 Place the APIRateLimiter folder into your project folder.
 
-[Install and run redis]:http://redis.io/topics/quickstart on your server.
+[Install and run redis]http://redis.io/topics/quickstart on your server.
 
 ###Incoming/outgoing
 RateLimiter is capable of tracking both incoming or outgoing requests.  In fact, it can be used to limit the rate of anything if you're clever.
@@ -31,7 +31,7 @@ The third parameter of the RateLimiter constructor takes a javascript object wit
 
 *`"auth_pass" : <string>` If your redis database is secured, place the password here.
 
-Other available properties can be found [here: https://www.npmjs.com/package/redis]:https://www.npmjs.com/package/redis in the API documentation of the npm redis module.  They should mirror the options available in the redis API for server and connection options.
+Other available properties can be found [here: https://www.npmjs.com/package/redis]https://www.npmjs.com/package/redis in the API documentation of the npm redis module.  They should mirror the options available in the redis API for server and connection options.
 
 
 
@@ -63,7 +63,8 @@ To initiate limit tracking for an API, use this function on its own or along wit
 `limit` should be an integer, such that the system will allow: *limit* global requests per *timeWindow*
 
 ###Testing
-For the purposes of testing, a small test server has been created at tests/testServer.js.  This server creates and uses mock API requests to test the rateLimiter.  It also serves as an example for integrating rateLimiter with your node server.
+For the purposes of testing, a small test server has been created at tests/testServer.js.  This server responds to mock API requests sent by the test suite in order to test the rateLimiter functionality.  It also serves as an example for integrating a rateLimiter object into your node server for limitting incoming requests.  You can use a very similar pattern to rate limit outgoing rerquests--the limiter works either way.
+
 
 To run tests, `$ npm test`.
 
@@ -71,5 +72,7 @@ To run tests, `$ npm test`.
 *Separate code into incoming and outgoing rate limiters.  Expose specialized objects.  Create express middlewre for incoming limiters.
 
 *Add ability to handle request queueing in OutgoingRateLimiter.
+
+*Create express/restify middleware.
 
 *Simplify and streamline timeWindow parameter to allow for wide range of times in easier format.  Perhaps create a specialized datatype with ints of either seconds, minutes, hours, or days.
