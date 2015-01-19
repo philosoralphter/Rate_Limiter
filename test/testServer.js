@@ -1,12 +1,12 @@
 var restify = require('restify');
 
 
-function (PORT){
+function makeServer(PORT){
   var server = restify.createServer();
 
   server.get('/testRoute1', function (req, res, next){
 
   });
 
-  server.listen(PORT)
+  //server.listen(PORT)
 }

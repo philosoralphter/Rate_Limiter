@@ -25,7 +25,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
           }else{
             checkPerUserLimit(APIOptions, usr, function(response){
               if (response !== true){
-                console.log('Per User Limit Exceeded for API: ', APIname, 'and user: ', usr);
+                console.log('Per-user limit exceeded for user:', usr, 'on API:', APIname);
                 mainCallback(false);
               }else{
                 mainCallback(true);
@@ -47,9 +47,10 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
       //Check per-user limit only
       }else if (APIOptions.perUserLimit){
-        checkPerUserLimit(APIname, usr, function(response){
+        checkPerUserLimit(APIOptions, usr, function(response){
+
           if (response !== true){
-            console.log('Per User Limit Exceeded for API: ', APIname, 'and user: ', usr);
+            console.log('Per-user limit exceeded for user:', usr, 'on API:', APIname);
             mainCallback(false);
           }else{
             mainCallback(true);
@@ -102,7 +103,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
   function checkPerUserLimit(APIOptions, usr, callback){
 
-    checkListNotAtLimit(APIOptions.APIname+usr, APIOptions.perUserLimit, APIOptions.perUserLimitTimeWindow, callback);
+    checkListNotAtLimit(APIOptions.APIname + usr, APIOptions.perUserLimit, APIOptions.perUserLimitTimeWindow, callback);
   }
 
   function checkListNotAtLimit (listName, limit, timeWindow, callback){
@@ -116,7 +117,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       if (response <= limit){
         callback(true);
         //Push time of new, approved call to list:
-        redisClient.RPUSH(listName, new Date.getTime());
+        redisClient.RPUSH(listName, new Date().getTime());
 
       //Otherwise, clean list of expired calls (> timeWindow old)
       //and check new length, approving or denying request accordingly
@@ -173,23 +174,24 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 //
 //not currently used:
 //
-  function getAPIOptions(APIname, callback){
-    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
-    redisClient.HGETALL(APIname + ' Settings', function(err, relpy){
-      if (err){console.log(err);}
-      callback(reply);
-      redisClient.quit();
-    });
-  }
+  // function getAPIOptions(APIname, callback){
+  //   var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
+  //   redisClient.HGETALL(APIname + ' Settings', function(err, relpy){
+  //     if (err){console.log(err);}
+  //     callback(reply);
+  //     redisClient.quit();
+  //   });
+  // }
 
 //apparently not needed
 //--counter to documentation, redis hashes seem to come back as parsed objects, not [key, value, key, value] arrays
-  function parseRedisHash(array){
-    var results = {};
-    for (var i = 0; i < array.length; i+=2) {
-      results[arr[i]] = array[i+1];
-    }
-    return results;
-  }
+//   function parseRedisHash(array){
+//     var results = {};
+//     for (var i = 0; i < array.length; i+=2) {
+//       results[arr[i]] = array[i+1];
+//     }
+//     return results;
+//   }
+
 }
 
