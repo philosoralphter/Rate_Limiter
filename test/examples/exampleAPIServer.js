@@ -1,5 +1,5 @@
 var restify = require('restify');
-var RL = require('../src/rateLimiter');
+var RL = require('../../src/rateLimiter');
 
 //
 //Server which limits outgoing requests
@@ -14,7 +14,7 @@ rateLimiter.setPerUserLimit(serverName, 20, 60000); //20 per user per minute
 rateLimiter.setGlobalLimit(serverName, 100, 3600000); //100 per hour
 //Respond to testRoute1
 server.get('/testRoute1', function (req, res, next){
-  var userIP = req.headers['x-forwarded-for'];
+  var userIP = req.connection.remoteAddress;
 
   //first, authorize request:
   rateLimiter.authorizeRequest(serverName, userIP, function(isAllClear){
