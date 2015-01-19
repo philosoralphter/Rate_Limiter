@@ -82,13 +82,28 @@ To initiate limit tracking for an API, use this function on its own or along wit
 
 `limit` should be an integer, such that the system will allow: *limit* global requests per *timeWindow*
 
-###Testing
-For the purposes of testing, a small test server has been created at tests/testServer.js.  This server serves as an example for integrating a rateLimiter object into your node server for limitting incoming requests.  You can use a very similar pattern to rate limit outgoing requests--the limiter works either way.
+##Testing
+
+To run tests, be sure your redis server is running(`$ redis-server`), then in another shell: `$ npm test`.
 
 
-To run tests, `$ npm test`.
+For the purposes of testing, and example, a small test API server and a test API harvester can be found at test/examples/.  This server serves as an example for integrating a rateLimiter object into your node server for limitting incoming requests.  The harvester uses a very similar pattern to rate limit outgoing requests--the same limiter object works either way.
 
-###Roadmap
+The server and harvester work in concert to demonstrate the rateLimiter.  To run them, run the following three commands in order, in three separate shells:
+
+```shell
+$ redis-server
+```
+
+```shell
+$ node rate_limiter/test/examples/exampleAPIServer.js
+```
+
+```shell
+$ node rate_limiter/test/examples/exampleAPIHarvester.js
+```
+
+##Roadmap
 *Separate code into incoming and outgoing rate limiters.  Expose specialized objects.  Create express middlewre for incoming limiters.
 
 *Add ability to handle request queueing in OutgoingRateLimiter.
@@ -96,3 +111,5 @@ To run tests, `$ npm test`.
 *Create express/restify middleware.
 
 *Simplify and streamline timeWindow parameter to allow for wide range of times in easier format.  Perhaps create a specialized datatype with ints of either seconds, minutes, hours, or days.
+
+* Incorporate status reports as parameter to callback for authorizeRequest() so that reason for denial (global limit exceeded or user limit exceeded) is available to handling code.
