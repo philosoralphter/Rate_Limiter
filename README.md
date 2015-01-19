@@ -16,7 +16,9 @@ It is fastest to use a redis instance running locally to your server.  If you do
 ##Usage
 
 ###Incoming/outgoing
+
 APIRateLimiter is capable of tracking both incoming or outgoing requests.  In fact, it can be used to limit the rate of anything if you're clever.
+
 ---
 ###Require rateLimiter and the RateLimiter Constructor:
 In your server or your API client, require rateLimiter.js and instantiate a rateLimiter:
@@ -46,13 +48,13 @@ Other available properties can be found [here: https://www.npmjs.com/package/red
 
 ####rateLimiter.authorizeRequest(APIname:\<string>, user:\<string\>, callback:\<function(\<boolean\>)\>)
 
-This function takes the name of an API being limited, a string associated with the user making the request.  This will likely be an IP, but not necessarily.
+This function takes the name of an API being limited, a string associated with the user making the request.  (This will likely be an IP, or an API account key), and finally, a callback.
 
-If you are only limiting global calls, pass `null` in the place of a user string for the second argument.
+If you are only limiting global calls, passing `null` in the place of a user string for the second argument is fine.
 
-The third parameter takes a callback function which will be called once the rate limiter has cleared or rejected a request.
+The third parameter takes a callback function which will be called asynchronously once the rate limiter has cleared or rejected a request.  The callback will be called with a single boolean argument:  `true` if the request would not exceed the set limit, or `false` if it would.  You should pass a function that will handle either sending, queueing, or discarding the request once it is approved or denied.  
 
-The callback will be called with a single boolean argument:  `true` if the request will not exceed the set limit, or `false` if it would.
+It may be necessary to pass a closure to maintain access to the request object in question.  This will be fixed soon with express.js middleware handling, or perhaps sooner, an optional fourth argument to `authorizeRequest()` that will accept a raw request object which it will pass untouched to the callback.
 
 
 ####rateLimiter.setPerUserLimit(APIname:\<string\>, limit:\<integer\>, timeWindow:\<integer\>)
