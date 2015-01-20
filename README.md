@@ -1,5 +1,7 @@
 ##API Rate Limiter
-This is an npm module that will allow you to instantiate a RateLimiter object in your node.js or io.js server.  The object exposes the public methods documented below and is designed to be used for rate limiting incoming or outgoing API calls.  Rate limiter is designed to be fast and scalable, so it uses a redis database to keep track of requests per user and globally.
+This is an npm module that will allow you to instantiate a RateLimiter object in your node.js or io.js server.  The object exposes the public methods documented below and is designed to be used for rate limiting incoming or outgoing API calls.  Rate limiter is designed to be fast and scalable, so it uses a redis database to keep track of per-user and global requests.
+
+**N.B.**  Rate_Limiter is not yet production-ready.  If you would like to help make it production-ready, [submit a pull request]https://github.com/philosoralphter/Rate_Limiter/pulls!
 
 ###Installation and Dependencies
 Place the APIRateLimiter folder into your project folder, or use npm:
