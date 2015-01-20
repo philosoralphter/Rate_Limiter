@@ -1,7 +1,7 @@
 ##API Rate Limiter
 This is an npm module that will allow you to instantiate a RateLimiter object in your node.js or io.js server.  The object exposes the public methods documented below and is designed to be used for rate limiting incoming or outgoing API calls.  Rate limiter is designed to be fast and scalable, so it uses a redis database to keep track of per-user and global requests.
 
-**N.B.**  Rate_Limiter is not yet production-ready.  If you would like to help make it production-ready, [submit a pull request]https://github.com/philosoralphter/Rate_Limiter/pulls!
+**N.B.**  Rate_Limiter is not yet production-ready.  If you would like to help make it production-ready, [submit a pull request](https://github.com/philosoralphter/Rate_Limiter/pulls)!
 
 ###Installation and Dependencies
 Place the APIRateLimiter folder into your project folder, or use npm:
@@ -11,7 +11,7 @@ $ npm install --save rate_limiter
 ```
 
 Next, install and run redis on your server.
-[Quickstart Guide]http://redis.io/topics/quickstart
+[Quickstart Guide](http://redis.io/topics/quickstart)
 
 Once redis is installed, you can run it with:
 
@@ -36,7 +36,7 @@ var RateLimiter = require('rateLimiter');
 ```
 
 
-####RateLimiter(redisPORT:\<integer\>, redisIP:\<string\>, redisOptions:\<object\>)
+####RateLimiter(redisPORT:`<integer>`, redisIP:`<string>`, redisOptions:`<object>`)
 
 Instantiate a new rateLimiter object.
 ```javascript
@@ -51,13 +51,13 @@ The third parameter of the RateLimiter constructor takes a javascript object wit
 
 * `"auth_pass" : <string>` If your redis database is secured, place the password here.
 
-Other available properties can be found [here: https://www.npmjs.com/package/redis]https://www.npmjs.com/package/redis in the API documentation of the npm redis module.  They should mirror the options available in the redis API for server and connection options.
+Other available properties can be found [here: https://www.npmjs.com/package/redis](https://www.npmjs.com/package/redis) in the API documentation of the npm redis module.  They should mirror the options available in the redis API for server and connection options.
 
 
 
 ###rateLimiter Methods
 
-####rateLimiter.authorizeRequest(APIname:\<string>, user:\<string\>, callback:\<function(\<boolean\>)\>)
+####rateLimiter.authorizeRequest(APIname:`<string>`, user:`<string>`, callback:`<function(<boolean>)>`)
 
 This function takes the name of an API being limited, a string associated with the user making the request.  (This will likely be an IP, or an API account key), and finally, a callback.
 
@@ -68,7 +68,7 @@ The third parameter takes a callback function which will be called asynchronousl
 You may find it necessary to pass a closure to maintain access to the request object in question.  This will be fixed soon with express.js middleware handling, or perhaps sooner, an optional fourth argument to `authorizeRequest()` that will accept a raw request object which it will pass untouched to the callback.
 
 
-####rateLimiter.setPerUserLimit(APIname:\<string\>, limit:\<integer\>, timeWindow:\<integer\>)
+####rateLimiter.setPerUserLimit(APIname:`<string>`, limit:`<integer>`, timeWindow:`<integer>`)
 
 To initiate limit tracking for an API, use this function on its own or along with rateLimiter.setGlobalLimit().  A new API tracker will be created if APIname hasn't been added before.  
 
@@ -76,7 +76,7 @@ To initiate limit tracking for an API, use this function on its own or along wit
 
 `limit` should be an integer.  such that the system will allow: *limit* requests per user per *timeWIndow*
 
-####rateLimiter.setGlobalLimit(APIname:\<string\>, limit:\<integer\>, timeWindow:\<integer\>)
+####rateLimiter.setGlobalLimit(APIname:`<string>`, limit:`<integer>`, timeWindow:`<integer`>)
 
 To initiate limit tracking for an API, use this function on its own or along with rateLimiter.setPerUserLimit().
 
