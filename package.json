@@ -1,6 +1,6 @@
 {
   "name": "rate_limiter",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Incoming and Outgoing API rate limiter.  Limit other rates if you dare.",
   "main": "server.js",
   "scripts": {
