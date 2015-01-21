@@ -22,25 +22,26 @@ $ redis-server
 It is fastest to use a redis instance running locally to your server.  If you do this, and do not change redis default port, the example `redisPORT` and `redisIP` arguments given below to the `RateLimiter()` constructor will be the redis defaults.
 
 ##Usage
+---
 
 ###Incoming/outgoing
 
 APIRateLimiter is capable of tracking both incoming or outgoing requests.  In fact, it can be used to limit the rate of anything if you're clever.
 
----
 ###Require rateLimiter and the RateLimiter Constructor:
 In your server or your API client, require rateLimiter.js and instantiate a rateLimiter:
 
 ```javascript
-var RateLimiter = require('rateLimiter');
+var RL = require('rate_limiter');
 ```
 
 
+####  **Constructor:**
 ####RateLimiter(redisPORT:`<integer>`, redisIP:`<string>`, redisOptions:`<object>`)
 
 Instantiate a new rateLimiter object.
 ```javascript
-var rateLimiter = new RateLimiter(6379, "localhost", {});
+var rateLimiter = new RL.RateLimiter(6379, "localhost", {});
 ```
 
 Any argument can be `null` to accept redis defaults.  To accept all redis defaults (Port: 6379, ip: localhost, no options), use constructor with no arguments.
@@ -55,7 +56,7 @@ Other available properties can be found [here: https://www.npmjs.com/package/red
 
 
 
-###rateLimiter Methods
+###rateLimiter Object Public Methods
 
 ####rateLimiter.authorizeRequest(APIname:`<string>`, user:`<string>`, callback:`<function(<boolean>)>`)
 
@@ -86,7 +87,10 @@ To initiate limit tracking for an API, use this function on its own or along wit
 
 ##Testing
 
-To run tests, be sure your redis server is running(`$ redis-server`), then in another shell: `$ npm test`.
+To run tests, be sure your redis server is running(`$ redis-server`), then in another shell, from the rate_limiter project directory: 
+```shell
+$ npm test
+```
 
 
 For the purposes of testing, and example, a small test API server and a test API harvester can be found at test/examples/.  This server serves as an example for integrating a rateLimiter object into your node server for limitting incoming requests.  The harvester uses a very similar pattern to rate limit outgoing requests--the same limiter object works either way.
@@ -114,4 +118,4 @@ $ node rate_limiter/test/examples/exampleAPIHarvester.js
 
 *Simplify and streamline timeWindow parameter to allow for wide range of times in easier format.  Perhaps create a specialized datatype with ints of either seconds, minutes, hours, or days.
 
-* Incorporate status reports as parameter to callback for authorizeRequest() so that reason for denial (global limit exceeded or user limit exceeded) is available to handling code.
+*Incorporate status reports as parameter to callback for authorizeRequest() so that reason for denial (global limit exceeded or user limit exceeded) is available to handling code.
