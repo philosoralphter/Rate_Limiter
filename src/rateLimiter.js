@@ -18,7 +18,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
 
   this.authorizeRequest = function(APIname, usr, mainCallback){
-    var redisClient = createRedisConnection();
+    var redisClient = createRedisConnection(mainCallback);
     
     redisClient.HGETALL(APIname + ' Settings', function(err, reply){
       if (err){
@@ -98,7 +98,9 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   };
 
   this.setPerUserLimit = function(APIname, limit, timeWindow){
-    var redisClient = createRedisConnection();
+    var redisClient = createRedisConnection(function(err){
+      console.log('Error setting perUser limit for API: '+ APIname + ':', err);
+    });
     
     //Schema of APIOptions hash table in redis
     var APIOptions = {
@@ -113,7 +115,9 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   };
 
   this.setGlobalLimit = function(APIname, limit, timeWindow){
-    var redisClient = createRedisConnection();
+    var redisClient = createRedisConnection(function(err){
+      console.log('Error setting global limit for API: '+ APIname + ':', err);
+    });
     
     //Schema of APIOptions hash table in redis
     var APIOptions = {
@@ -151,7 +155,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   }
 
   function checkListNotAtLimit (listName, limit, timeWindow, callback){
-    var redisClient = createRedisConnection();
+    var redisClient = createRedisConnection(callback);
 
     //Check list length
     redisClient.LLEN(listName, function(err, response){
@@ -196,7 +200,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   //Private Subroutines
   function popDirtyItems(listName, timeWindow, listCleanedCB){
     var async = require('async');
-    var redisClient = createRedisConnection();
+    var redisClient = createRedisConnection(listCleanedCB);
 
     var lastPoppedItemTime;
     var newLength;
@@ -231,11 +235,12 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
     );
   }
 
-  function createRedisConnection(){
+  function createRedisConnection(callback){
     var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
 
     redisClient.on('error', function(err){
       console.log("Error connecting to redis database: ", err);
+      callback(err);
     });
 
     return redisClient;
