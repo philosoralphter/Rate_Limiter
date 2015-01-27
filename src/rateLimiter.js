@@ -11,9 +11,12 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   //Closure Properties
   var redis = require('redis');
 
+
   //--------------
   //Public Methods
   //---------------
+
+
   this.authorizeRequest = function(APIname, usr, mainCallback){
     var redisClient = createRedisConnection();
     
@@ -27,12 +30,23 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
       //Check both limits
       if (APIOptions.globalLimit && APIOptions.perUserLimit){
-        checkGlobalLimit(APIOptions, function(response){
+        checkGlobalLimit(APIOptions, function(err, response){
+          if (err){
+            console.log('Error: ', err);
+            return mainCallback(err);
+          }
+
           if (response !== true){
             console.log('Global Limit Exceeded for API: ', APIname);
             mainCallback(null, false);
+          
           }else{
-            checkPerUserLimit(APIOptions, usr, function(response){
+            checkPerUserLimit(APIOptions, usr, function(err, response){
+              if (err){
+                console.log('Error: ', err);
+                return mainCallback(err);
+              }
+
               if (response !== true){
                 console.log('Per-user limit exceeded for user:', usr, 'on API:', APIname);
                 mainCallback(null, false);
@@ -45,7 +59,12 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
       //Check Global only
       }else if (APIOptions.globalLimit){
-        checkGlobalLimit(APIOptions, function(response){
+        checkGlobalLimit(APIOptions, function(err, response){
+          if (err){
+            console.log('Error: ', err);
+            return mainCallback(err);
+          }
+
           if (response !== true){
             console.log('Global Limit Exceeded for API: ', APIname);
             mainCallback(null, false);
@@ -56,7 +75,11 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
       //Check per-user limit only
       }else if (APIOptions.perUserLimit){
-        checkPerUserLimit(APIOptions, usr, function(response){
+        checkPerUserLimit(APIOptions, usr, function(err, response){
+          if (err){
+            console.log('Error: ', err);
+            return mainCallback(err);
+          }
 
           if (response !== true){
             console.log('Per-user limit exceeded for user:', usr, 'on API:', APIname);
@@ -76,6 +99,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
   this.setPerUserLimit = function(APIname, limit, timeWindow){
     var redisClient = createRedisConnection();
+    
     //Schema of APIOptions hash table in redis
     var APIOptions = {
       "APIOptionsHashTableName": APIname + ' Settings',
@@ -83,12 +107,14 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       "perUserLimit" : limit,
       "perUserLimitTimeWindow" : timeWindow
     };
+    
     //store each api's info in a hash table in redis named APIName Settings
       redisClient.HMSET(APIOptions.APIOptionsHashTableName , 'APIname', APIname, 'perUserLimit', APIOptions.perUserLimit, 'perUserLimitTimeWindow', APIOptions.perUserLimitTimeWindow);
   };
 
   this.setGlobalLimit = function(APIname, limit, timeWindow){
     var redisClient = createRedisConnection();
+    
     //Schema of APIOptions hash table in redis
     var APIOptions = {
       "APIname": APIname,
@@ -97,6 +123,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       "globalTrackerListName" : APIname + ' global limit tracker list',
       "globalLimitTimeWindow" : timeWindow
     };
+
     //store each api's info in a hash table in redis named '<APIname>+ Settings'
     redisClient.HMSET(APIOptions.APIOptionsHashTableName, 
       'APIname', APIname,
@@ -106,9 +133,12 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
     );
   };
 
+
+
   //--------------
   //Private Helper Functions
   //-------------
+
   function checkGlobalLimit(APIOptions, callback){
 
     checkListNotAtLimit(APIOptions.globalTrackerListName, APIOptions.globalLimit, APIOptions.globalLimitTimeWindow, callback);
@@ -125,24 +155,32 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
     //Check list length
     redisClient.LLEN(listName, function(err, response){
-      if (err){console.log(err);}
+      if (err){
+        console.log('Error getting list of requests for ' + listName + ':', err);
+        return callback(err);
+      }
       
       //if length below limit, approve
       if (response <= limit){
-        callback(true);
+        callback(null, true);
         //Push time of new, approved call to list:
         redisClient.RPUSH(listName, new Date().getTime());
 
       //Otherwise, clean list of expired calls (> timeWindow old)
       //and check new length, approving or denying request accordingly
       }else{
-        popDirtyItems(listName, timeWindow, function(lengthAfterPops){
+        popDirtyItems(listName, timeWindow, function(err, lengthAfterPops){
+          if (err){
+            console.log('Error popping items from list ' + listName + ':', err);
+            return callback(err);
+          }
+
           if (lengthAfterPops <= limit){
-            callback(true);
+            callback(null, true);
             //Push time of new, approved call to list:
             redisClient.RPUSH(listName, new Date.getTime());
           }else{
-            callback(false);
+            callback(null, false);
           }
         });
       }
@@ -159,18 +197,21 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   function popDirtyItems(listName, timeWindow, listCleanedCB){
     var async = require('async');
     var redisClient = createRedisConnection();
-    
+
     var lastPoppedItemTime;
     var newLength;
 
     //Sync Loop:  pop head off list until popped item is within timeWindow old.
     //then push it back on, and return new list length
     async.doWhilst(
-      function popEarliestItem(asyncCallback){
+      function popEarliestItem(nextIteration){
         redisClient.LPOP(listName, function(err, response){
-          if (err){console.log(err);}
+          if (err){
+            return nextIteration(err);
+          }
+
           lastPoppedItemTime = response;
-          asyncCallback(err);
+          nextIteration();
         });
       },
       function testIfWithinWindow(){
@@ -178,10 +219,14 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
         return (now - lastPoppedItemTime) >= timeWindow;
       },
       function doneCleaning(err){
-        if (err){console.log(err);}
+        if (err){
+          console.log(err);
+          if (listCleanedCB){listCleanedCB(err);}
+        }
+
         redisClient.LPUSH(listName, lastPoppedItemTime);
         redisClient.quit();
-        if (listCleanedCB){listCleanedCB(newLength);}
+        if (listCleanedCB){listCleanedCB(null, newLength);}
       }
     );
   }

@@ -74,7 +74,7 @@ describe ('RateLimiter.js', function(){
     describe('rateLimiter.authorizeRequest(): ', function(){
       
       it ('should return a boolean', function (done){
-        rateLimiter.authorizeRequest('usertestAPI', 'testUser', function(isAllClear){
+        rateLimiter.authorizeRequest('usertestAPI', 'testUser', function(err, isAllClear){
           isAllClear.should.be.a.Boolean;
           isAllClear.should.be.true;
         });
@@ -93,7 +93,7 @@ describe ('RateLimiter.js', function(){
 
         //Make 10 requests in two seconds--limit set above is 4/second
         var requestInterval = setInterval(function(){
-          rateLimiter.authorizeRequest('testAPI', "APIkeyOrIPAddressHereforUser1", function(response){
+          rateLimiter.authorizeRequest('testAPI', "APIkeyOrIPAddressHereforUser1", function(err, response){
             limiterResponses.total++;
             if (response === true){
               limiterResponses.allow++;
@@ -126,7 +126,7 @@ describe ('RateLimiter.js', function(){
 
        //Make 20 requests in two seconds--limit set above is 7/second
        var requestInterval = setInterval(function(){
-          rateLimiter.authorizeRequest('testAPI2', null, function(response){
+          rateLimiter.authorizeRequest('testAPI2', null, function(err, response){
             limiterResponses.total++;
             if (response === true){
               limiterResponses.allow++;
@@ -164,7 +164,7 @@ describe ('RateLimiter.js', function(){
        //Make 40 mock requests in two seconds--limit set above is 4/second per user and 7/second global
        var requestInterval = setInterval(function(){
           
-          rateLimiter.authorizeRequest('testAPI2', 'userA', function(response){
+          rateLimiter.authorizeRequest('testAPI2', 'userA', function(err, response){
             limiterResponsesUserA.total++;
             if (response === true){
               limiterResponsesUserA.allow++;
@@ -173,7 +173,7 @@ describe ('RateLimiter.js', function(){
             }
           });
 
-          rateLimiter.authorizeRequest('testAPI2', 'userB', function(response){
+          rateLimiter.authorizeRequest('testAPI2', 'userB', function(err, response){
             limiterResponsesUserB.total++;
             if (response === true){
               limiterResponsesUserB.allow++;
