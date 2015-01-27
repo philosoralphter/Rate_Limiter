@@ -15,16 +15,12 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   //Public Methods
   //---------------
   this.authorizeRequest = function(APIname, usr, mainCallback){
-    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
-
-    redisClient.on('error', function(err){
-      console.log("Error connecting to redis database. Cannot authorize request.", err);
-    });
+    var redisClient = createRedisConnection();
     
     redisClient.HGETALL(APIname + ' Settings', function(err, reply){
       if (err){
         console.log('Error accessing API Settings in database for: ' + APIname +
-          '\nPerhaps that API has not yet been Added to the limiter: ', err);
+          '\nPerhaps that API has not yet been Added to the limiter. Error: ', err);
         return mainCallback(err);
       }
       var APIOptions = reply;
@@ -79,7 +75,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   };
 
   this.setPerUserLimit = function(APIname, limit, timeWindow){
-    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
+    var redisClient = createRedisConnection();
     //Schema of APIOptions hash table in redis
     var APIOptions = {
       "APIOptionsHashTableName": APIname + ' Settings',
@@ -92,7 +88,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   };
 
   this.setGlobalLimit = function(APIname, limit, timeWindow){
-    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
+    var redisClient = createRedisConnection();
     //Schema of APIOptions hash table in redis
     var APIOptions = {
       "APIname": APIname,
@@ -125,7 +121,7 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   }
 
   function checkListNotAtLimit (listName, limit, timeWindow, callback){
-    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
+    var redisClient = createRedisConnection();
 
     //Check list length
     redisClient.LLEN(listName, function(err, response){
@@ -162,7 +158,8 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   //Private Subroutines
   function popDirtyItems(listName, timeWindow, listCleanedCB){
     var async = require('async');
-    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
+    var redisClient = createRedisConnection();
+    
     var lastPoppedItemTime;
     var newLength;
 
@@ -187,6 +184,16 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
         if (listCleanedCB){listCleanedCB(newLength);}
       }
     );
+  }
+
+  function createRedisConnection(){
+    var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
+
+    redisClient.on('error', function(err){
+      console.log("Error connecting to redis database: ", err);
+    });
+
+    return redisClient;
   }
 
 //
