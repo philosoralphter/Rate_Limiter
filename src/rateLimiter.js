@@ -16,9 +16,17 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
   //---------------
   this.authorizeRequest = function(APIname, usr, mainCallback){
     var redisClient = redis.createClient(redisPORT, redisIP, redisOptions);
+
+    redisClient.on('error', function(err){
+      console.log("Error connecting to redis database. Cannot authorize request.", err);
+    });
     
     redisClient.HGETALL(APIname + ' Settings', function(err, reply){
-      if (err){console.log(err);}
+      if (err){
+        console.log('Error accessing API Settings in database for: ' + APIname +
+          '\nPerhaps that API has not yet been Added to the limiter: ', err);
+        return mainCallback(err);
+      }
       var APIOptions = reply;
 
       //Check both limits
@@ -26,14 +34,14 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
         checkGlobalLimit(APIOptions, function(response){
           if (response !== true){
             console.log('Global Limit Exceeded for API: ', APIname);
-            mainCallback(false);
+            mainCallback(null, false);
           }else{
             checkPerUserLimit(APIOptions, usr, function(response){
               if (response !== true){
                 console.log('Per-user limit exceeded for user:', usr, 'on API:', APIname);
-                mainCallback(false);
+                mainCallback(null, false);
               }else{
-                mainCallback(true);
+                mainCallback(null, true);
               }
             });
           }
@@ -44,9 +52,9 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
         checkGlobalLimit(APIOptions, function(response){
           if (response !== true){
             console.log('Global Limit Exceeded for API: ', APIname);
-            mainCallback(false);
+            mainCallback(null, false);
           }else{
-            mainCallback(true);
+            mainCallback(null, true);
           }
         });
 
@@ -56,16 +64,16 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
 
           if (response !== true){
             console.log('Per-user limit exceeded for user:', usr, 'on API:', APIname);
-            mainCallback(false);
+            mainCallback(null, false);
           }else{
-            mainCallback(true);
+            mainCallback(null, true);
           }
         });
 
     //No limits set->approve
       }else{
         console.log('No limits set for API: ', APIname);
-        mainCallback(true);
+        mainCallback(null, true);
       }
     });
   };
@@ -94,7 +102,12 @@ function RateLimiter(redisPORT, redisIP, redisOptions) {
       "globalLimitTimeWindow" : timeWindow
     };
     //store each api's info in a hash table in redis named '<APIname>+ Settings'
-    redisClient.HMSET(APIOptions.APIOptionsHashTableName, 'APIname', APIname,'globalLimit', APIOptions.globalLimit, 'globalLimitTimeWindow', APIOptions.globalLimitTimeWindow, 'globalTrackerListName', APIOptions.globalTrackerListName);
+    redisClient.HMSET(APIOptions.APIOptionsHashTableName, 
+      'APIname', APIname,
+      'globalLimit', APIOptions.globalLimit, 
+      'globalLimitTimeWindow', APIOptions.globalLimitTimeWindow, 
+      'globalTrackerListName', APIOptions.globalTrackerListName
+    );
   };
 
   //--------------
